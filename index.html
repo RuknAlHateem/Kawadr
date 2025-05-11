@@ -1,273 +1,314 @@
 
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>نموذج الكوادر - شركة ركن الحطيم للحج</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f0f2f5;
-      direction: rtl;
-      text-align: right;
-      padding: 30px;
-      max-width: 800px;
-      margin: auto;
-    }
-    .form-box {
-      background: #fff;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 25px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      margin-bottom: 30px;
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 15px;
-    }
-    label.required::after {
-      content: " *";
-      color: red;
-    }
-    input, select {
-      width: 97%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #198754;
-      color: white;
-      padding: 12px;
-      margin-top: 25px;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #157347;
-    }
-    .group-title {
-      margin-top: 30px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #198754;
-    }
-    .gender-option, .nationality-option {
-      border: 1px solid #ccc;
-      padding: 10px 20px;
-      border-radius: 6px;
-      background: #f9f9f9;
-      cursor: pointer;
-      transition: background 0.3s, border-color 0.3s;
-    }
-    .gender-option input,
-    .nationality-option input {
-      display: none;
-    }
-    .gender-option.selected,
-    .nationality-option.selected {
-      background-color: #d1e7dd;
-      border-color: #198754;
-      font-weight: bold;
-    }
-    #loader {
-      display: none;
-      text-align: center;
-      margin-top: 20px;
-    }
-  
-    @media (max-width: 600px) {
+  <!DOCTYPE html>
+  <html lang="ar">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>نموذج الكوادر - شركة ركن الحطيم للحج</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <style>
       body {
-        padding: 15px;
+        font-family: 'Cairo', sans-serif;
+        background: #f0f2f5;
+        direction: rtl;
+        text-align: right;
+        padding: 30px;
+        max-width: 800px;
+        margin: auto;
       }
       .form-box {
-        padding: 15px;
+        background: #fff;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
       }
-      .group-title {
-        font-size: 16px;
+      label {
+        font-weight: bold;
+        display: block;
+        margin-top: 15px;
       }
-      button {
-        width: 100%;
+      label.required::after {
+        content: " *";
+        color: red;
       }
-      #genderGroup, #nationalityGroup {
-        flex-direction: column;
+      input, select {
+        width: 97%;
+        padding: 8px;
+        margin-top: 5px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
       }
-    }
-    </style>
-
-</head>
-<body>
-
-<div style="background: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
-  <img src="https://i.imgur.com/KBYpYEM.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 10px;">
-  <h2 style="margin: 0; color: #198754;">شركة ركن الحطيم للحج</h2>
-  <p style="margin: 5px 0 0;">نموذج تسجيل بيانات الكوادر</p>
-</div>
-
-<div class="form-box" id="verifyBox">
-  <h2>التحقق من البيانات</h2>
-  <label class="required">رقم السجل المدني:</label>
-  <input type="text" id="id">
-  <button onclick="checkData()">التالي</button>
-  <div id="loader">
-    <img src="https://i.imgur.com/llF5iyg.gif" alt="جارٍ التحميل" width="40"><br>جاري التحقق...
-  </div>
-</div>
-
-<form id="formSection" style="display:none;" class="form-box">
-
-  <div class="form-box">
-    <div class="group-title">الاسم بالعربي</div>
-    <label class="required">الاسم الأول:</label>
-    <input type="text" id="name_ar">
-    <label class="required">اسم الأب:</label>
-    <input type="text" id="father_ar">
-    <label class="required">اسم الجد:</label>
-    <input type="text" id="grandfather_ar">
-    <label class="required">اسم العائلة:</label>
-    <input type="text" id="family_ar">
-  </div>
-
-  <div class="form-box">
-    <div class="group-title">الاسم بالإنجليزي</div>
-    <label class="required">الاسم الأول (إنجليزي):</label>
-    <input type="text" id="name_en" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')">
-    <label class="required">اسم الأب (إنجليزي):</label>
-    <input type="text" id="father_en" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')">
-    <label class="required">اسم الجد (إنجليزي):</label>
-    <input type="text" id="grandfather_en" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')">
-    <label class="required">اسم العائلة (إنجليزي):</label>
-    <input type="text" id="family_en" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')">
-  </div>
-
-  <div class="form-box">
-    <div class="group-title">المعلومات الشخصية</div>
-
-    <label class="required">الجنس:</label>
-    <div id="genderGroup" style="display: flex; gap: 15px; margin-top: 10px;">
-      <label class="gender-option" onclick="selectGender(this)">
-        <input type="radio" name="gender" value="ذكر"> ذكر
-      </label>
-      <label class="gender-option" onclick="selectGender(this)">
-        <input type="radio" name="gender" value="أنثى"> أنثى
-      </label>
-    </div>
-
-    <label class="required">الجنسية:</label>
-    <div id="nationalityGroup" style="display: flex; gap: 15px; margin-top: 10px;">
-      <label class="nationality-option" onclick="selectNationality(this)">
-        <input type="radio" name="nationality" value="سعودي"> سعودي
-      </label>
-      <label class="nationality-option" onclick="selectNationality(this)">
-        <input type="radio" name="nationality" value="أخرى"> أخرى
-      </label>
-    </div>
-    <div id="otherNationalityDiv" style="display:none; margin-top: 10px;">
-      <label>حدد الجنسية:</label>
-      <input type="text" id="other_nationality">
-    </div>
-
-    <label class="required">رقم الجوال:</label>
-    <input type="text" id="phone" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g, ''); validatePhone(this)">
-    <div id="phoneError" style="color: red; display: none;">رقم الجوال يجب أن يكون 10 أرقام فقط</div>
-
-    <label class="required">تاريخ الميلاد:</label>
-    <input type="date" id="birth_date_en">
-
-    <label class="required">القسم:</label>
-    <select id="department">
-      <option value="">اختر</option>
-      <option value="العمران">العمران</option>
-      <option value="الشعبة">الشعبة</option>
-      <option value="المبرز">المبرز</option>
-      <option value="الشركة">الشركة</option>
-    </select>
-  </div>
-
-  <div class="form-box">
-    <div class="group-title">البيانات الإضافية</div>
-    <label>المسمى الوظيفي (اختياري):</label>
-    <input type="text" id="job_title">
-
-    <label class="required">البريد الإلكتروني:</label>
-    <input type="email" id="email">
-
-    <label class="required">المؤهل العلمي:</label>
-    <select id="qualification">
-      <option value="">اختر</option>
-      <option value="ابتدائي">ابتدائي</option>
-      <option value="متوسط">متوسط</option>
-      <option value="ثانوي">ثانوي</option>
-      <option value="دبلوم">دبلوم</option>
-      <option value="بكالوريوس">بكالوريوس</option>
-      <option value="ماجستير">ماجستير</option>
-      <option value="دكتوراه">دكتوراه</option>
-      <option value="أخرى">أخرى</option>
-    </select>
-  </div>
-
-  
-    <button type="button" onclick="saveData()">إرسال / تحديث</button>
-    <div id="submitLoader" style="display:none; text-align:center; margin-top:15px;">
-      <img src="https://i.imgur.com/llF5iyg.gif" alt="جاري الإرسال" width="40"><br>
-      جاري إرسال البيانات...
-    </div>
-    
-</form>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCjLt3g-2GPsMlxXPnzySXpCHl3-FyA80I",
-    authDomain: "hajj2025-56177.firebaseapp.com",
-    projectId: "hajj2025-56177",
-    storageBucket: "hajj2025-56177.appspot.com",
-    messagingSenderId: "199404422758",
-    appId: "1:199404422758:web:35a17e6155f660e0128fa7"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  function selectGender(el) {
-    document.querySelectorAll('.gender-option').forEach(e => e.classList.remove('selected'));
-    el.classList.add('selected');
-    el.querySelector('input').checked = true;
+      select {
+    font-size: 16px;
+    padding: 10px;
   }
 
-  function selectNationality(el) {
+      button {
+        background: #198754;
+        color: white;
+        padding: 12px;
+        margin-top: 25px;
+        border: none;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #157347;
+      }
+      .group-title {
+        margin-top: 30px;
+        font-size: 18px;
+        font-weight: bold;
+        color: #198754;
+      }
+      .gender-option, .nationality-option {
+        border: 1px solid #ccc;
+        padding: 10px 20px;
+        border-radius: 6px;
+        background: #f9f9f9;
+        cursor: pointer;
+        transition: background 0.3s, border-color 0.3s;
+      }
+      .gender-option input,
+      .nationality-option input {
+        display: none;
+      }
+      .gender-option.selected,
+      .nationality-option.selected {
+        background-color: #d1e7dd;
+        border-color: #198754;
+        font-weight: bold;
+      }
+      #loader {
+        display: none;
+        text-align: center;
+        margin-top: 20px;
+      }
+    
+      @media (max-width: 600px) {
+    body {
+      padding: 15px;
+    }
+    .form-box {
+      padding: 15px;
+    }
+    .group-title {
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+    }
+  }
+
+
+      .gender-option,
+  .nationality-option {
+    display: inline-block;
+    width: auto;
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #f9f9f9;
+    cursor: pointer;
+    transition: background 0.3s, border-color 0.3s;
+    text-align: center;
+    flex: none;
+  }
+
+  #genderGroup,
+  #nationalityGroup {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: start;
+  }
+
+      </style>
+
+  </head>
+  <body>
+
+  <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
+    <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 10px;">
+    <h2 style="margin: 0; color: #198754;">شركة ركن الحطيم للحج</h2>
+    <p style="margin: 5px 0 0;">نموذج تسجيل بيانات الكوادر</p>
+  </div>
+
+  <div class="form-box" id="verifyBox">
+    <h2>التحقق من البيانات</h2>
+    <label class="required">رقم الجوال:</label>
+    <input type="text" id="phoneSearch" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g, '')">
+    <button onclick="checkData()">التالي</button>
+      <div id="loader">
+      <img src="https://i.imgur.com/llF5iyg.gif" alt="جارٍ التحميل" width="40"><br>جاري التحقق...
+    </div>
+  </div>
+
+  <form id="formSection" style="display:none;" class="form-box">
+    <input type="hidden" id="id">
+
+    <div class="form-box">
+      <div class="group-title">الاسم بالعربي</div>
+      <label class="required">الاسم الأول:</label>
+      <input type="text" id="name_ar">
+      <label class="required">اسم الأب:</label>
+      <input type="text" id="father_ar">
+      <label class="required">اسم الجد:</label>
+      <input type="text" id="grandfather_ar">
+      <label class="required">اسم العائلة:</label>
+      <input type="text" id="family_ar">
+    </div>
+
+    <div class="form-box">
+      <div class="group-title">الاسم بالإنجليزي</div>
+      <label class="required">الاسم الأول (إنجليزي):</label>
+      <input type="text" id="name_en" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')">
+      <label class="required">اسم الأب (إنجليزي):</label>
+      <input type="text" id="father_en" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')">
+      <label class="required">اسم الجد (إنجليزي):</label>
+      <input type="text" id="grandfather_en" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')">
+      <label class="required">اسم العائلة (إنجليزي):</label>
+      <input type="text" id="family_en" oninput="this.value=this.value.replace(/[^a-zA-Z ]/g,'')">
+    </div>
+
+    <div class="form-box">
+      <div class="group-title">المعلومات الشخصية</div>
+      <label class="required">الجنس:</label>
+      <div id="genderGroup">
+        <label class="gender-option" onclick="selectGender(this)">
+          <input type="radio" name="gender" value="ذكر" style="display:none;"> ذكر
+        </label>
+        <label class="gender-option" onclick="selectGender(this)">
+          <input type="radio" name="gender" value="أنثى" style="display:none;"> أنثى
+        </label>
+      </div>
+      
+      <label class="required">الجنسية:</label>
+      <div id="nationalityGroup">
+        <label class="nationality-option" onclick="selectNationality(this)">
+          <input type="radio" name="nationality" value="سعودي" style="display:none;"> سعودي
+        </label>
+        <label class="nationality-option" onclick="selectNationality(this)">
+          <input type="radio" name="nationality" value="أخرى" style="display:none;"> أخرى
+        </label>
+        <div id="otherNationalityDiv" style="display:none; margin-top: 10px;">
+          <label class="required">حدد الجنسية:</label>
+          <input type="text" id="other_nationality">
+        </div>
+        
+      </div>
+      
+      
+
+      <label class="required">رقم الجوال:</label>
+      <input type="text" id="phone" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g, ''); validatePhone(this)">
+      <div id="phoneError" style="color: red; display: none;">رقم الجوال يجب أن يكون 10 أرقام فقط</div>
+
+      <label class="required">تاريخ الميلاد:</label>
+      <input type="date" id="birth_date_en">
+
+      <label class="required">القسم:</label>
+      <select id="department">
+        <option value="">اختر</option>
+        <option value="العمران">العمران</option>
+        <option value="الشعبة">الشعبة</option>
+        <option value="المبرز">المبرز</option>
+        <option value="الشركة">الشركة</option>
+      </select>
+    </div>
+
+    <div class="form-box">
+      <div class="group-title">البيانات الإضافية</div>
+      <label>المسمى الوظيفي (اختياري):</label>
+      <input type="text" id="job_title">
+
+      <label class="required">البريد الإلكتروني:</label>
+      <input type="email" id="email">
+
+      <label class="required">المؤهل العلمي:</label>
+      <select id="qualification">
+        <option value="">اختر</option>
+        <option value="ابتدائي">ابتدائي</option>
+        <option value="متوسط">متوسط</option>
+        <option value="ثانوي">ثانوي</option>
+        <option value="دبلوم">دبلوم</option>
+        <option value="بكالوريوس">بكالوريوس</option>
+        <option value="ماجستير">ماجستير</option>
+        <option value="دكتوراه">دكتوراه</option>
+        <option value="أخرى">أخرى</option>
+      </select>
+    </div>
+
+    
+      <button type="button" onclick="saveData()">إرسال / تحديث</button>
+      <div id="submitLoader" style="display:none; text-align:center; margin-top:15px;">
+        <img src="https://i.imgur.com/llF5iyg.gif" alt="جاري الإرسال" width="40"><br>
+        جاري إرسال البيانات...
+      </div>
+      
+  </form>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCjLt3g-2GPsMlxXPnzySXpCHl3-FyA80I",
+      authDomain: "hajj2025-56177.firebaseapp.com",
+      projectId: "hajj2025-56177",
+      storageBucket: "hajj2025-56177.appspot.com",
+      messagingSenderId: "199404422758",
+      appId: "1:199404422758:web:35a17e6155f660e0128fa7"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function selectGender(el) {
+      document.querySelectorAll('.gender-option').forEach(e => e.classList.remove('selected'));
+      el.classList.add('selected');
+      el.querySelector('input').checked = true;
+    }
+
+    function selectNationality(el) {
     document.querySelectorAll('.nationality-option').forEach(e => e.classList.remove('selected'));
     el.classList.add('selected');
     el.querySelector('input').checked = true;
-    const val = el.querySelector('input').value;
-    document.getElementById("otherNationalityDiv").style.display = (val === "أخرى") ? "block" : "none";
-    if (val !== "أخرى") document.getElementById("other_nationality").value = "";
+
+    const value = el.querySelector('input').value;
+    if (value === "أخرى") {
+      document.getElementById("otherNationalityDiv").style.display = "block";
+    } else {
+      document.getElementById("otherNationalityDiv").style.display = "none";
+      document.getElementById("other_nationality").value = "";
+    }
   }
 
-  function validatePhone(input) {
-    const error = document.getElementById("phoneError");
-    error.style.display = (input.value.length > 10) ? "block" : "none";
-  }
 
-  async function checkData() {
-    const id = document.getElementById("id").value.trim();
-    if (!id) return alert("الرجاء إدخال رقم السجل المدني");
+
+    function validatePhone(input) {
+      const error = document.getElementById("phoneError");
+      error.style.display = (input.value.length > 10) ? "block" : "none";
+    }
+
+    async function checkData() {
+    const phone = document.getElementById("phoneSearch").value.trim();
+    if (!phone) return alert("الرجاء إدخال رقم الجوال");
+
     document.getElementById("loader").style.display = "block";
-    const docRef = db.collection("kawadr").doc(id);
-    const doc = await docRef.get();
+
+    const querySnapshot = await db.collection("kawadr").where("phone", "==", phone).limit(1).get();
     document.getElementById("loader").style.display = "none";
+
     document.getElementById("verifyBox").style.display = "none";
     document.getElementById("formSection").style.display = "block";
 
-    if (doc.exists) {
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0];
       const data = doc.data();
+      document.getElementById("id").value = data.id || "";
+
       for (const key in data) {
         if (document.getElementById(key)) {
           document.getElementById(key).value = data[key];
@@ -290,43 +331,44 @@
     }
   }
 
-  async function saveData() {
-    const id = document.getElementById("id").value.trim();
-    const gender = document.querySelector('input[name="gender"]:checked');
-    const nationality = document.querySelector('input[name="nationality"]:checked');
 
-    if (!id || !gender || !nationality) return alert("يرجى تعبئة جميع الحقول الإلزامية (*)");
+    async function saveData() {
+      const id = document.getElementById("id").value.trim();
+      const gender = document.querySelector('input[name="gender"]:checked');
+      const nationality = document.querySelector('input[name="nationality"]:checked');
 
-    const fields = [
-      "name_ar", "father_ar", "grandfather_ar", "family_ar",
-      "name_en", "father_en", "grandfather_en", "family_en",
-      "phone", "birth_date_en", "department",
-      "job_title", "email", "qualification"
-    ];
+      if (!id || !gender || !nationality) return alert("يرجى تعبئة جميع الحقول الإلزامية (*)");
 
-    const data = { id, gender: gender.value, nationality: nationality.value };
+      const fields = [
+        "name_ar", "father_ar", "grandfather_ar", "family_ar",
+        "name_en", "father_en", "grandfather_en", "family_en",
+        "phone", "birth_date_en", "department",
+        "job_title", "email", "qualification"
+      ];
 
-    for (const field of fields) {
-      data[field] = document.getElementById(field).value;
+      const data = { id, gender: gender.value, nationality: nationality.value };
+
+      for (const field of fields) {
+        data[field] = document.getElementById(field).value;
+      }
+
+      if (nationality.value === "أخرى") {
+        data["nationality"] = document.getElementById("other_nationality").value || "أخرى";
+      }
+
+      
+      document.getElementById("submitLoader").style.display = "block";
+      await db.collection("kawadr").doc(id).set(data);
+      document.body.innerHTML = `
+        <div style="text-align: center; padding: 30px;">
+          <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 20px;">
+          <h2 style="color: #198754;">شكراً لتعبئة النموذج</h2>
+          <p style="font-size: 18px; margin-top: 15px;">نسأل الله أن يكتب لكم الأجر والتوفيق في خدمة ضيوف الرحمن</p>
+        </div>
+      `;
+      
     }
+  </script>
 
-    if (nationality.value === "أخرى") {
-      data["nationality"] = document.getElementById("other_nationality").value || "أخرى";
-    }
-
-    
-    document.getElementById("submitLoader").style.display = "block";
-    await db.collection("kawadr").doc(id).set(data);
-    document.body.innerHTML = `
-      <div style="text-align: center; padding: 30px;">
-        <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 20px;">
-        <h2 style="color: #198754;">شكراً لتعبئة النموذج</h2>
-        <p style="font-size: 18px; margin-top: 15px;">نسأل الله أن يكتب لكم الأجر والتوفيق في خدمة ضيوف الرحمن</p>
-      </div>
-    `;
-    
-  }
-</script>
-
-</body>
-</html>
+  </body>
+  </html>
