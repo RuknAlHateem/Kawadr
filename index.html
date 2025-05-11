@@ -2,9 +2,7 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>نموذج الكوادر - شركة ركن الحطيم للحج</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -37,7 +35,7 @@
       color: red;
     }
     input, select {
-      width: 100%;
+      width: 97%;
       padding: 8px;
       margin-top: 5px;
       border-radius: 5px;
@@ -103,45 +101,13 @@
         flex-direction: column;
       }
     }
-
-    @media (max-width: 600px) {
-  body {
-    padding: 15px;
-  }
-  .form-box {
-    padding: 15px;
-    border-radius: 8px;
-  }
-  .group-title {
-    font-size: 16px;
-    margin-top: 20px;
-  }
-  label, input, select, button {
-    font-size: 14px;
-  }
-  #genderGroup, #nationalityGroup {
-    flex-direction: column;
-  }
-  .gender-option, .nationality-option {
-    width: 100%;
-    text-align: center;
-  }
-  button {
-    width: 100%;
-  }
-  img[alt="شعار الشركة"] {
-    max-width: 100px;
-    height: auto;
-  }
-}
-
     </style>
 
 </head>
 <body>
 
 <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 30px; box-shadow: 0 0 10px rgba(0,0,0,0.05);">
-  <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 10px;">
+  <img src="https://i.imgur.com/KBYpYEM.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 10px;">
   <h2 style="margin: 0; color: #198754;">شركة ركن الحطيم للحج</h2>
   <p style="margin: 5px 0 0;">نموذج تسجيل بيانات الكوادر</p>
 </div>
@@ -248,7 +214,13 @@
     </select>
   </div>
 
-  <button type="button" onclick="saveData()">إرسال / تحديث</button>
+  
+    <button type="button" onclick="saveData()">إرسال / تحديث</button>
+    <div id="submitLoader" style="display:none; text-align:center; margin-top:15px;">
+      <img src="https://i.imgur.com/llF5iyg.gif" alt="جاري الإرسال" width="40"><br>
+      جاري إرسال البيانات...
+    </div>
+    
 </form>
 
 <script>
@@ -342,8 +314,17 @@
       data["nationality"] = document.getElementById("other_nationality").value || "أخرى";
     }
 
+    
+    document.getElementById("submitLoader").style.display = "block";
     await db.collection("kawadr").doc(id).set(data);
-    alert("تم الحفظ بنجاح");
+    document.body.innerHTML = `
+      <div style="text-align: center; padding: 30px;">
+        <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 20px;">
+        <h2 style="color: #198754;">شكراً لتعبئة النموذج</h2>
+        <p style="font-size: 18px; margin-top: 15px;">نسأل الله أن يكتب لكم الأجر والتوفيق في خدمة ضيوف الرحمن</p>
+      </div>
+    `;
+    
   }
 </script>
 
