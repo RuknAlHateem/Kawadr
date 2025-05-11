@@ -2,6 +2,8 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <meta charset="UTF-8">
   <title>نموذج الكوادر - شركة ركن الحطيم للحج</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
@@ -101,6 +103,38 @@
         flex-direction: column;
       }
     }
+
+    @media (max-width: 600px) {
+  body {
+    padding: 15px;
+  }
+  .form-box {
+    padding: 15px;
+    border-radius: 8px;
+  }
+  .group-title {
+    font-size: 16px;
+    margin-top: 20px;
+  }
+  label, input, select, button {
+    font-size: 14px;
+  }
+  #genderGroup, #nationalityGroup {
+    flex-direction: column;
+  }
+  .gender-option, .nationality-option {
+    width: 100%;
+    text-align: center;
+  }
+  button {
+    width: 100%;
+  }
+  img[alt="شعار الشركة"] {
+    max-width: 100px;
+    height: auto;
+  }
+}
+
     </style>
 
 </head>
