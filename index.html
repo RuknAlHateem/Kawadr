@@ -149,7 +149,8 @@
   </div>
 
   <form id="formSection" style="display:none;" class="form-box">
-    <input type="hidden" id="id">
+    <div id="formErrors" style="display:none; background:#f8d7da; color:#842029; padding:15px; border-radius:5px; margin-bottom:15px;"></div>
+
 
     <div class="form-box">
       <div class="group-title">الاسم بالعربي</div>
@@ -177,6 +178,10 @@
 
     <div class="form-box">
       <div class="group-title">المعلومات الشخصية</div>
+      <label class="required">رقم الهوية الوطنية:</label>
+<input type="text" id="id" maxlength="10">
+
+
       <label class="required">الجنس:</label>
       <div id="genderGroup">
         <label class="gender-option" onclick="selectGender(this)">
@@ -331,43 +336,96 @@
     }
   }
 
+  async function saveData() {
+  const errorBox = document.getElementById("formErrors");
+  errorBox.style.display = "none";
+  errorBox.innerHTML = "";
+  document.querySelectorAll(".input-error").forEach(el => el.classList.remove("input-error"));
 
-    async function saveData() {
-      const id = document.getElementById("id").value.trim();
-      const gender = document.querySelector('input[name="gender"]:checked');
-      const nationality = document.querySelector('input[name="nationality"]:checked');
+  const id = document.getElementById("id").value.trim();
+  const gender = document.querySelector('input[name="gender"]:checked');
+  const nationality = document.querySelector('input[name="nationality"]:checked');
 
-      if (!id || !gender || !nationality) return alert("يرجى تعبئة جميع الحقول الإلزامية (*)");
+  const requiredFields = [
+    { id: "name_ar", label: "الاسم الأول" },
+    { id: "father_ar", label: "اسم الأب" },
+    { id: "grandfather_ar", label: "اسم الجد" },
+    { id: "family_ar", label: "اسم العائلة" },
+    { id: "name_en", label: "الاسم الأول (إنجليزي)" },
+    { id: "father_en", label: "اسم الأب (إنجليزي)" },
+    { id: "grandfather_en", label: "اسم الجد (إنجليزي)" },
+    { id: "family_en", label: "اسم العائلة (إنجليزي)" },
+    { id: "phone", label: "رقم الجوال" },
+    { id: "birth_date_en", label: "تاريخ الميلاد" },
+    { id: "department", label: "القسم" },
+    { id: "email", label: "البريد الإلكتروني" },
+    { id: "id", label: "رقم الهوية الوطنية:" },
 
-      const fields = [
-        "name_ar", "father_ar", "grandfather_ar", "family_ar",
-        "name_en", "father_en", "grandfather_en", "family_en",
-        "phone", "birth_date_en", "department",
-        "job_title", "email", "qualification"
-      ];
+    { id: "qualification", label: "المؤهل العلمي" }
+  ];
 
-      const data = { id, gender: gender.value, nationality: nationality.value };
+  const errors = [];
 
-      for (const field of fields) {
-        data[field] = document.getElementById(field).value;
-      }
+  if (!id) errors.push("رقم الهوية مفقود");
+  if (!gender) errors.push("الجنس غير محدد");
+  if (!nationality) errors.push("الجنسية غير محددة");
 
-      if (nationality.value === "أخرى") {
-        data["nationality"] = document.getElementById("other_nationality").value || "أخرى";
-      }
-
-      
-      document.getElementById("submitLoader").style.display = "block";
-      await db.collection("kawadr").doc(id).set(data);
-      document.body.innerHTML = `
-        <div style="text-align: center; padding: 30px;">
-          <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 20px;">
-          <h2 style="color: #198754;">شكراً لتعبئة النموذج</h2>
-          <p style="font-size: 18px; margin-top: 15px;">نسأل الله أن يكتب لكم الأجر والتوفيق في خدمة ضيوف الرحمن</p>
-        </div>
-      `;
-      
+  requiredFields.forEach(field => {
+    const val = document.getElementById(field.id)?.value.trim();
+    if (!val) {
+      errors.push("حقل " + field.label + " مطلوب");
+      document.getElementById(field.id).classList.add("input-error");
     }
+  });
+
+  if (nationality?.value === "أخرى") {
+    const other = document.getElementById("other_nationality").value.trim();
+    if (!other) {
+      errors.push("يرجى تحديد الجنسية الأخرى");
+      document.getElementById("other_nationality").classList.add("input-error");
+    }
+  }
+
+  if (errors.length > 0) {
+    errorBox.innerHTML = "<ul><li>" + errors.join("</li><li>") + "</li></ul>";
+    errorBox.style.display = "block";
+    window.scrollTo(0, 0);
+    return;
+  }
+
+  const fields = [
+    "name_ar", "father_ar", "grandfather_ar", "family_ar",
+    "name_en", "father_en", "grandfather_en", "family_en",
+    "phone", "birth_date_en", "department",
+    "job_title", "email", "qualification"
+  ];
+
+const data = {
+  id,
+  gender: gender.value,
+  nationality: nationality.value,
+  last_updated: new Date().toISOString()
+};
+
+  for (const field of fields) {
+    data[field] = document.getElementById(field).value;
+  }
+
+  if (nationality.value === "أخرى") {
+    data["nationality"] = document.getElementById("other_nationality").value || "أخرى";
+  }
+
+  document.getElementById("submitLoader").style.display = "block";
+  await db.collection("kawadr").doc(id).set(data);
+  document.body.innerHTML = `
+    <div style="text-align: center; padding: 30px;">
+      <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 20px;">
+      <h2 style="color: #198754;">شكراً لتعبئة النموذج</h2>
+      <p style="font-size: 18px; margin-top: 15px;">نسأل الله أن يكتب لكم الأجر والتوفيق في خدمة ضيوف الرحمن</p>
+    </div>
+  `;
+}
+
   </script>
 
   </body>
