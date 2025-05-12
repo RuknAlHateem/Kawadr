@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>عرض السجلات من Firestore</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      direction: rtl;
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #aaa;
+      padding: 8px;
+      text-align: right;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 5px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+
+<body onload="checkPassword()">
+<div id="authOverlay" style="position:fixed;top:0;right:0;bottom:0;left:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;">
+  <h2>الرجاء إدخال الرقم السري</h2>
+  <input type="password" id="passwordInput" style="padding:10px;font-size:16px;width:200px;text-align:center">
+  <button onclick="validatePassword()" style="margin-top:15px;padding:10px 20px;">دخول</button>
+  <p id="authError" style="color:red;margin-top:10px;display:none;">الرقم السري غير صحيح</p>
+</div>
+<script>
+  function checkPassword() {
+    document.getElementById("authOverlay").style.display = "flex";
+  }
+  
+  let attempts = 0;
+  function validatePassword() {
+    const pass = document.getElementById("passwordInput").value;
+    const errorBox = document.getElementById("authError");
+
+    if (pass === "13579") {
+      document.getElementById("authOverlay").style.display = "none";
+    } else {
+      attempts++;
+      errorBox.style.display = "block";
+      errorBox.innerText = "الرقم السري غير صحيح. المحاولة " + attempts + " من 5";
+      if (attempts >= 5) {
+        document.body.innerHTML = "<div style='display:flex;align-items:center;justify-content:center;height:100vh;font-size:22px;color:red;font-family:sans-serif;'>تم حظر الوصول بعد تجاوز عدد المحاولات المسموح بها.</div>";
+      }
+    }
+  }
+
+    const pass = document.getElementById("passwordInput").value;
+    if (pass === "13579") {
+      document.getElementById("authOverlay").style.display = "none";
+    } else {
+      document.getElementById("authError").style.display = "block";
+    }
+  
+</script>
+
+
+  <h2>جميع السجلات من قاعدة البيانات</h2>
+  
+  <button onclick="exportToExcel()">تصدير إلى Excel</button>
+  <button onclick="exportToCSV()">تصدير إلى CSV</button>
+
+  <table id="recordsTable">
+    <thead>
+      <tr id="filterRow"></tr>
+      <tr id="headerRow"></tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCjLt3g-2GPsMlxXPnzySXpCHl3-FyA80I",
+      authDomain: "hajj2025-56177.firebaseapp.com",
+      projectId: "hajj2025-56177",
+      storageBucket: "hajj2025-56177.appspot.com",
+      messagingSenderId: "199404422758",
+      appId: "1:199404422758:web:35a17e6155f660e0128fa7",
+      measurementId: "G-T5NYMDX68Z"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const columns = ['id', 'name_ar', 'father_ar', 'grandfather_ar', 'family_ar', 'name_en', 'father_en', 'grandfather_en', 'family_en', 'gender', 'nationality', 'phone', 'birth_date_en', 'qualification', 'job_title', 'email', 'department', 'last_updated'];
+    const labels = ['رقم الهوية', 'الاسم الأول', 'اسم الأب', 'اسم الجد', 'اسم العائلة', 'First Name', 'Father Name', 'Grandfather', 'Family Name', 'الجنس', 'الجنسية', 'رقم الجوال', 'تاريخ الميلاد', 'المؤهل العلمي', 'المسمى الوظيفي', 'البريد الإلكتروني', 'القسم', 'آخر تحديث'];
+    const filters = {};
+
+    function renderFilters() {
+      const filterRow = document.getElementById("filterRow");
+      filterRow.innerHTML = "";
+      columns.forEach(col => {
+        const th = document.createElement("th");
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "فلتر...";
+        input.oninput = () => {
+          filters[col] = input.value.trim();
+          renderTable();
+        };
+        th.appendChild(input);
+        filterRow.appendChild(th);
+      });
+    }
+
+    function renderHeaders() {
+      const headerRow = document.getElementById("headerRow");
+      headerRow.innerHTML = "";
+      labels.forEach(label => {
+        const th = document.createElement("th");
+        th.textContent = label;
+        headerRow.appendChild(th);
+      });
+    }
+
+    let allRows = [];
+
+    function renderTable() {
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      const filtered = allRows.filter(row =>
+        columns.every(col =>
+          !filters[col] || (row[col] || "").toString().includes(filters[col])
+        )
+      );
+
+      filtered.forEach(row => {
+        const tr = document.createElement("tr");
+        columns.forEach(col => {
+          const td = document.createElement("td");
+          if (col === "last_updated" && row[col]) {
+            if (col === "last_updated" && row[col]) {
+  const d = new Date(row[col]);
+  td.textContent = d.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true
+  });
+} else {
+  td.textContent = row[col] || "";
+}
+} else {
+  td.textContent = row[col] || "";
+}
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function fetchData() {
+      const snapshot = await db.collection("kawadr").get();
+      allRows = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return { ...data, id: data.id || "", phone: doc.id };
+      });
+      renderFilters();
+      renderHeaders();
+      renderTable();
+    }
+
+    fetchData();
+  </script>
+
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script>
+    function exportToExcel() {
+      const exportData = allRows.filter(row =>
+        columns.every(col =>
+          !filters[col] || (row[col] || "").toString().includes(filters[col])
+        )
+      );
+
+      
+      const ordered = exportData.map(row => {
+        const newRow = {};
+        columns.forEach((col, i) => {
+          newRow[labels[i]] = row[col] || "";
+        });
+        return newRow;
+      });
+      const worksheet = XLSX.utils.json_to_sheet(ordered);
+    
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات");
+
+      XLSX.writeFile(workbook, "kawadr_export.xlsx");
+    }
+  
+    function exportToCSV() {
+      const filtered = allRows.filter(row =>
+        columns.every(col =>
+          !filters[col] || (row[col] || "").toString().includes(filters[col])
+        )
+      );
+
+      let csv = labels.join(",") + "\n";
+      filtered.forEach(row => {
+        csv += columns.map(col => `"${(row[col] || "").toString().replace(/"/g, '""')}"`).join(",") + "\n";
+      });
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "kawadr_export.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+
+
+</html>
