@@ -141,7 +141,7 @@
   <div class="form-box" id="verifyBox">
     <h2>التحقق من البيانات</h2>
     <label class="required">رقم الجوال:</label>
-    <input type="text" id="phoneSearch" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g, '')">
+    <input type="tel" id="phoneSearch" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g, '')">
     <button onclick="checkData()">التالي</button>
       <div id="loader">
       <img src="https://i.imgur.com/llF5iyg.gif" alt="جارٍ التحميل" width="40"><br>جاري التحقق...
@@ -191,7 +191,7 @@
     <div class="form-box">
       <div class="group-title">المعلومات الشخصية</div>
       <label class="required">رقم الهوية الوطنية:</label>
-<input type="text" id="id" maxlength="10">
+<input type="tel" id="id" maxlength="10">
 
 
       <label class="required">الجنس:</label>
@@ -222,7 +222,7 @@
       
 
       <label class="required">رقم الجوال:</label>
-      <input type="text" id="phone" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g, ''); validatePhone(this)">
+      <input type="tel" id="phone" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g, ''); validatePhone(this)">
       <div id="phoneError" style="color: red; display: none;">رقم الجوال يجب أن يكون 10 أرقام فقط</div>
 
       <label class="required">تاريخ الميلاد:</label>
