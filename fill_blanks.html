@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تعديل البيانات الناقصة</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: 'Cairo', sans-serif; padding: 20px; direction: rtl; background: #f9f9f9; }
+    .box { background: white; padding: 20px; border-radius: 10px; max-width: 95%; margin: auto; box-shadow: 0 0 10px #ccc; }
+    input[readonly] { background: #138e77; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #eee; }
+    input { width: 100%; padding: 6px; box-sizing: border-box; font-size: 14px; }
+    button { margin-top: 10px; padding: 10px 20px; font-size: 16px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="box" id="loginBox">
+  <h2>تسجيل الدخول كمسؤول قسم</h2>
+  <label>الرقم السري:</label>
+  <input type="password" id="password">
+  <button onclick="handleLogin()">دخول</button>
+</div>
+
+<div class="box hidden" id="dataBox">
+  <h2>السجلات الناقصة لقسم: <span id="sectionName"></span></h2>
+  <form id="dataForm" onsubmit="saveAll(event)">
+    <table id="recordsTable">
+      <thead>
+        <tr>
+          <th>رقم الهوية</th>
+          <th>الاسم الأول</th>
+          <th>اسم الأب</th>
+          <th>اسم الجد</th>
+          <th>اسم العائلة</th>
+          <th>First</th>
+          <th>Father</th>
+          <th>Grand</th>
+          <th>Family</th>
+          <th>الجوال</th>
+          <th>الميلاد</th>
+          <th>الوظيفة</th>
+          <th>الإيميل</th>
+          <th>المؤهل</th>
+        </tr>
+      </thead>
+      <tbody id="recordsBody"></tbody>
+    </table>
+    <button type="submit">حفظ التعديلات</button>
+  </form>
+</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCjLt3g-2GPsMlxXPnzySXpCHl3-FyA80I",
+    authDomain: "hajj2025-56177.firebaseapp.com",
+    projectId: "hajj2025-56177",
+    storageBucket: "hajj2025-56177.appspot.com",
+    messagingSenderId: "199404422758",
+    appId: "1:199404422758:web:35a17e6155f660e0128fa7"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const passwords = {
+    "11111": "العمران",
+    "24680": "الشعبة",
+    "11223": "المبرز",
+    "33445": "الشركة"
+  };
+
+  let currentData = {};
+
+  function handleLogin() {
+    const pass = document.getElementById("password").value;
+    const section = passwords[pass];
+    if (section) {
+      document.getElementById("loginBox").classList.add("hidden");
+      document.getElementById("dataBox").classList.remove("hidden");
+      document.getElementById("sectionName").textContent = section;
+      loadData(section);
+    } else {
+      alert("رقم سري غير صحيح");
+    }
+  }
+
+  async function loadData(department) {
+    const snapshot = await db.collection("kawadr").where("department", "==", department).get();
+    const tbody = document.getElementById("recordsBody");
+    tbody.innerHTML = "";
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      const id = doc.id;
+      currentData[id] = {};
+      const row = document.createElement("tr");
+
+      const fields = ["name_ar", "father_ar", "grandfather_ar", "family_ar", "name_en", "father_en", "grandfather_en", "family_en", "phone", "birth_date_en", "job_title", "email", "qualification"];
+      const arabicId = document.createElement("td");
+      arabicId.textContent = data.id || "";
+      row.appendChild(arabicId);
+
+      fields.forEach(field => {
+        const td = document.createElement("td");
+        const input = document.createElement("input");
+        input.name = `${id}_${field}`;
+        input.value = data[field] || "";
+        if (data[field] && data[field].toString().trim() !== "") {
+          input.readOnly = true;
+        }
+        td.appendChild(input);
+        row.appendChild(td);
+      });
+
+      tbody.appendChild(row);
+    });
+  }
+
+  async function saveAll(e) {
+    e.preventDefault();
+    const updatesById = {};
+
+    document.querySelectorAll("#recordsBody input").forEach(input => {
+      const [docId, field] = input.name.split("_");
+      if (!input.readOnly) {
+        if (!updatesById[docId]) updatesById[docId] = {};
+        updatesById[docId][field] = input.value;
+      }
+    });
+
+    const promises = Object.entries(updatesById).map(([id, updates]) =>
+      db.collection("kawadr").doc(id).update(updates)
+    );
+
+    await Promise.all(promises);
+    alert("تم الحفظ بنجاح");
+  }
+</script>
+
+</body>
+</html>
