@@ -263,28 +263,61 @@ const labels = ['#', 'الحالة', 'رقم الهوية', 'الاسم الأو
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script>
-    function exportToExcel() {
-      const exportData = allRows.filter(row =>
-        columns.every(col =>
-          !filters[col] || (row[col] || "").toString().includes(filters[col])
-        )
-      );
+function exportToExcel() {
+  const exportData = allRows.filter(row =>
+    columns.every(col =>
+      !filters[col] || (row[col] || "").toString().includes(filters[col])
+    )
+  );
 
-      
-      const ordered = exportData.map(row => {
-        const newRow = {};
-        columns.forEach((col, i) => {
-          newRow[labels[i]] = row[col] || "";
-        });
-        return newRow;
-      });
-      const worksheet = XLSX.utils.json_to_sheet(ordered);
-    
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات");
+  const ordered = exportData.map(row => {
+    const newRow = {};
+    columns.forEach((col, i) => {
+      if (labels[i] === "تاريخ الميلاد" || labels[i] === "آخر تحديث") {
+        const val = row[col];
+        if (val) {
+          const d = new Date(val);
+          if (!isNaN(d)) {
+            newRow[labels[i]] = d;
+          } else {
+            newRow[labels[i]] = "";
+          }
+        } else {
+          newRow[labels[i]] = "";
+        }
+      } else {
+        newRow[labels[i]] = row[col] || "";
+      }
+    });
+    return newRow;
+  });
 
-      XLSX.writeFile(workbook, "kawadr_export.xlsx");
+  const worksheet = XLSX.utils.json_to_sheet(ordered, { cellDates: true });
+
+  // تحديد الأعمدة التي نبي نطبق عليها تنسيق التاريخ
+  const dateCols = ["تاريخ الميلاد", "آخر تحديث"];
+  const dateFormat = "dd/mm/yyyy";
+
+  Object.keys(worksheet).forEach(cell => {
+    const col = cell.replace(/[0-9]/g, "");
+    const row = cell.replace(/[A-Z]/gi, "");
+    if (row === "1") return; // تجاهل الصف الأول (العناوين)
+
+    const label = worksheet[col + "1"]?.v;
+    if (dateCols.includes(label)) {
+      const cellData = worksheet[cell];
+      if (cellData?.v instanceof Date) {
+        worksheet[cell].t = "d";
+        worksheet[cell].z = dateFormat;
+      }
     }
+  });
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات");
+  XLSX.writeFile(workbook, "kawadr_export.xlsx");
+}
+
   
     function exportToCSV() {
       const filtered = allRows.filter(row =>
