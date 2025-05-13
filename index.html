@@ -332,43 +332,44 @@
     }
 
     async function checkData() {
-    const phone = document.getElementById("phoneSearch").value.trim();
-    if (!phone) return alert("الرجاء إدخال رقم الجوال");
+  const phone = document.getElementById("phoneSearch").value.trim();
+  if (!phone) return alert("الرجاء إدخال رقم الجوال");
 
-    document.getElementById("loader").style.display = "block";
+  document.getElementById("loader").style.display = "block";
 
-    const querySnapshot = await db.collection("kawadr").where("phone", "==", phone).limit(1).get();
-    document.getElementById("loader").style.display = "none";
+  const docRef = db.collection("kawadr").doc(phone);
+  const docSnap = await docRef.get();
 
-    document.getElementById("verifyBox").style.display = "none";
-    document.getElementById("formSection").style.display = "block";
+  document.getElementById("loader").style.display = "none";
+  document.getElementById("verifyBox").style.display = "none";
+  document.getElementById("formSection").style.display = "block";
 
-    if (!querySnapshot.empty) {
-      const doc = querySnapshot.docs[0];
-      const data = doc.data();
-      document.getElementById("id").value = data.id || "";
+  if (docSnap.exists) {
+    const data = docSnap.data();
+    document.getElementById("id").value = data.id || "";
 
-      for (const key in data) {
-        if (document.getElementById(key)) {
-          document.getElementById(key).value = data[key];
-        }
-        if (key === "gender") {
-          const genderEl = [...document.getElementsByName("gender")].find(g => g.value === data[key]);
-          if (genderEl) genderEl.checked = true;
-          document.querySelectorAll('.gender-option').forEach(el => {
-            if (el.querySelector('input').value === data[key]) el.classList.add('selected');
-          });
-        }
-        if (key === "nationality") {
-          const natEl = [...document.getElementsByName("nationality")].find(n => n.value === data[key]);
-          if (natEl) natEl.checked = true;
-          document.querySelectorAll('.nationality-option').forEach(el => {
-            if (el.querySelector('input').value === data[key]) el.classList.add('selected');
-          });
-        }
+    for (const key in data) {
+      if (document.getElementById(key)) {
+        document.getElementById(key).value = data[key];
+      }
+      if (key === "gender") {
+        const genderEl = [...document.getElementsByName("gender")].find(g => g.value === data[key]);
+        if (genderEl) genderEl.checked = true;
+        document.querySelectorAll('.gender-option').forEach(el => {
+          if (el.querySelector('input').value === data[key]) el.classList.add('selected');
+        });
+      }
+      if (key === "nationality") {
+        const natEl = [...document.getElementsByName("nationality")].find(n => n.value === data[key]);
+        if (natEl) natEl.checked = true;
+        document.querySelectorAll('.nationality-option').forEach(el => {
+          if (el.querySelector('input').value === data[key]) el.classList.add('selected');
+        });
       }
     }
   }
+}
+
 
   async function saveData() {
   const errorBox = document.getElementById("formErrors");
