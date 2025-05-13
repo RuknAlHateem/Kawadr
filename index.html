@@ -441,6 +441,8 @@ const data = {
   nationality: nationality.value,
   last_updated: new Date().toISOString()
 };
+    data.phone = document.getElementById("phone").value.trim();
+
 
   for (const field of fields) {
     data[field] = document.getElementById(field).value;
