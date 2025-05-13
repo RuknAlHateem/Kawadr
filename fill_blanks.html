@@ -9,7 +9,7 @@
   <style>
     body { font-family: 'Cairo', sans-serif; padding: 20px; direction: rtl; background: #f9f9f9; }
     .box { background: white; padding: 20px; border-radius: 10px; max-width: 95%; margin: auto; box-shadow: 0 0 10px #ccc; }
-    input[readonly] { background: #94ffbd; }
+    input[readonly] { background: #138e77; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background: #eee; }
@@ -106,8 +106,26 @@
 
       fields.forEach(field => {
         const td = document.createElement("td");
-        const input = document.createElement("input");
+        
+        let input;
+        if (field === "birth_date_en") {
+          input = document.createElement("input");
+          input.type = "date";
+        } else if (field === "qualification") {
+          input = document.createElement("select");
+          const options = ["", "ابتدائي", "متوسط", "ثانوي", "دبلوم", "بكالوريوس", "ماجستير", "دكتوراه"];
+          options.forEach(opt => {
+            const option = document.createElement("option");
+            option.value = opt;
+            option.textContent = opt;
+            if (data[field] === opt) option.selected = true;
+            input.appendChild(option);
+          });
+        } else {
+          input = document.createElement("input");
+        }
         input.name = `${id}_${field}`;
+    
         input.value = data[field] || "";
         if (data[field] && data[field].toString().trim() !== "") {
           input.readOnly = true;
@@ -143,3 +161,4 @@
 
 </body>
 </html>
+
