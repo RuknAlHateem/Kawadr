@@ -31,12 +31,48 @@
       padding: 5px;
       margin-bottom: 5px;
     }
+
+    @media screen and (max-width: 768px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  th, td {
+    text-align: right;
+    padding: 10px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+  }
+}
+
+
+
   </style>
 </head>
 
 <body onload="checkPassword()">
 <div id="authOverlay" style="position:fixed;top:0;right:0;bottom:0;left:0;background:#fff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:sans-serif;">
   <h2>الرجاء إدخال الرقم السري</h2>
+  
   <input type="password" id="passwordInput" style="padding:10px;font-size:16px;width:200px;text-align:center">
   <button onclick="validatePassword()" style="margin-top:15px;padding:10px 20px;">دخول</button>
 </div>
@@ -98,8 +134,10 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const columns = ['id', 'name_ar', 'father_ar', 'grandfather_ar', 'family_ar', 'name_en', 'father_en', 'grandfather_en', 'family_en', 'gender', 'nationality', 'phone', 'birth_date_en', 'qualification', 'job_title', 'email', 'department', 'last_updated'];
-    const labels = ['رقم الهوية', 'الاسم الأول', 'اسم الأب', 'اسم الجد', 'اسم العائلة', 'First Name', 'Father Name', 'Grandfather', 'Family Name', 'الجنس', 'الجنسية', 'رقم الجوال', 'تاريخ الميلاد', 'المؤهل العلمي', 'المسمى الوظيفي', 'البريد الإلكتروني', 'القسم', 'آخر تحديث'];
+    const columns = ['_index', '_status', 'id', 'name_ar', 'father_ar', 'grandfather_ar', 'family_ar', 'name_en', 'father_en', 'grandfather_en', 'family_en', 'gender', 'nationality', 'phone', 'birth_date_en', 'qualification', 'job_title', 'email', 'department', 'last_updated'];
+
+const labels = ['#', 'الحالة', 'رقم الهوية', 'الاسم الأول', 'اسم الأب', 'اسم الجد', 'اسم العائلة', 'First Name', 'Father Name', 'Grandfather', 'Family Name', 'الجنس', 'الجنسية', 'رقم الجوال', 'تاريخ الميلاد', 'المؤهل العلمي', 'المسمى الوظيفي', 'البريد الإلكتروني', 'القسم', 'آخر تحديث'];
+
     const filters = {};
 
     function renderFilters() {
@@ -141,40 +179,79 @@
         )
       );
 
-      filtered.forEach(row => {
-        const tr = document.createElement("tr");
-        columns.forEach(col => {
-          const td = document.createElement("td");
-          if (col === "last_updated" && row[col]) {
-            if (col === "last_updated" && row[col]) {
-  const d = new Date(row[col]);
-  td.textContent = d.toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true
-  });
-} else {
-  td.textContent = row[col] || "";
-}
-} else {
-  td.textContent = row[col] || "";
-}
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
+      filtered.forEach((row, index) => {
+  const tr = document.createElement("tr");
+
+  columns.forEach(col => {
+    const td = document.createElement("td");
+
+    // العمود التسلسلي
+    if (col === "_index") {
+      td.textContent = index + 1;
+    }
+
+    // عمود الحالة الملوّن
+    else if (col === "_status") {
+      const requiredFields = [
+        "id", "name_ar", "father_ar", "grandfather_ar", "family_ar",
+        "name_en", "father_en", "grandfather_en", "family_en",
+        "gender", "nationality", "phone", "birth_date_en", "qualification", "email", "department"
+      ];
+      const isComplete = requiredFields.every(key => row[key] && row[key].toString().trim() !== "");
+      td.style.backgroundColor = isComplete ? "#198754" : "#ffc107";
+      td.style.color = "white";
+      td.style.fontWeight = "bold";
+      td.style.textAlign = "center";
+      td.textContent = isComplete ? "مكتمل" : "ناقص";
+    }
+
+    // عمود آخر تحديث
+    else if (col === "last_updated" && row[col]) {
+      const d = new Date(row[col]);
+      td.textContent = d.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
       });
+    }
+
+    // باقي الأعمدة
+    else {
+      td.textContent = row[col] || "";
+    }
+
+    tr.appendChild(td);
+  });
+
+  tbody.appendChild(tr);
+});
+
     }
 
     async function fetchData() {
       const snapshot = await db.collection("kawadr").get();
       allRows = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return { ...data, id: data.id || "", phone: doc.id };
-      });
+  const data = doc.data();
+  const row = { ...data, id: data.id || "", phone: doc.id };
+
+  const requiredFields = [
+    "id", "name_ar", "father_ar", "grandfather_ar", "family_ar",
+    "name_en", "father_en", "grandfather_en", "family_en",
+    "gender", "nationality", "phone", "birth_date_en", "qualification", "email", "department"
+  ];
+
+  const isComplete = requiredFields.every(key => row[key] && row[key].toString().trim() !== "");
+  row["_status"] = isComplete ? "مكتمل" : "ناقص";
+
+  return row;
+});
+
+
+
       renderFilters();
       renderHeaders();
       renderTable();
