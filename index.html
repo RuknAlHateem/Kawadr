@@ -463,6 +463,25 @@ const data = {
   `;
 }
 
+
+
+
+  const isRegistrationClosed = true; // غيّرها إلى false إذا بغيت تفتح التسجيل
+
+  window.onload = () => {
+    if (isRegistrationClosed) {
+      document.body.innerHTML = `
+        <div style="text-align: center; margin-top: 100px;">
+          <h2>انتهى التسجيل</h2>
+          <p>شكرًا لتفاعلكم، ونسأل الله لنا ولكم التوفيق في خدمة الحجاج.</p>
+        </div>
+      `;
+    }
+  };
+
+
+
+    
   </script>
 
   </body>
