@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>شركة ركن الحطيم للحج - رفع ملف PDF</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <style>
+    * {
+      font-family: 'Cairo', sans-serif;
+    }
+    body {
+      background: #f0f2f5;
+      direction: rtl;
+      padding: 30px;
+      max-width: 700px;
+      margin: auto;
+      text-align: right;
+    }
+    .header {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 30px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .form-box {
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background: #198754;
+      color: white;
+      padding: 12px;
+      width: 100%;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #157347;
+    }
+    #loader {
+      display: none;
+      text-align: center;
+      margin-top: 20px;
+    }
+    .support-box {
+      background: #fff;
+      padding: 20px;
+      border-top: 1px solid #ccc;
+      border-radius: 0 0 10px 10px;
+      text-align: center;
+      font-size: 15px;
+    }
+    .support-box a {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #25D366;
+      color: white;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 10px;">
+  <h2 style="color: #198754;">شركة ركن الحطيم للحج</h2>
+  <p>نموذج تحديث البيانات ورفع ملف PDF - حج 1446هـ</p>
+</div>
+
+<div class="form-box" id="verifyBox">
+  <h3>التحقق من رقم الجوال</h3>
+  <label>رقم الجوال:</label>
+  <input type="tel" id="phoneSearch" maxlength="10" inputmode="numeric">
+  <button onclick="checkData()">التالي</button>
+  <div id="loader">جاري التحقق...</div>
+</div>
+
+<div class="form-box" id="formBox" style="display:none;">
+  <h3>بيانات الكادر</h3>
+
+  <label>رقم الهوية:</label>
+  <input type="text" id="id" readonly style="background:#eee;">
+
+  <label>الاسم الكامل:</label>
+  <input type="text" id="full_name" readonly style="background:#eee;">
+
+  <label class="required">تاريخ الميلاد (ميلادي فقط):</label>
+  <input type="date" id="birth_date_en" required>
+
+  <label>ملف الهوية (PDF):</label>
+  <input type="file" id="pdfFile" accept="application/pdf">
+
+  <div id="submitLoader" style="display:none; text-align:center; margin-top:15px;">
+    <img src="https://i.imgur.com/llF5iyg.gif" alt="جاري الإرسال" width="40"><br>
+    جاري إرسال البيانات...
+  </div>
+
+  
+  <button onclick="submitData()">إرسال البيانات</button>
+</div>
+
+
+<div class="support-box">
+  <p>عند مواجهتك أي مشكلة في تعبئة النموذج، يمكنك التواصل مع الدعم الفني الخاص بشركة ركن الحطيم عبر واتساب:</p>
+  <a href="https://wa.me/966539617330" target="_blank">التواصل عبر واتساب</a>
+</div>
+
+<script>
+  // Firestore الأساسي
+  const primaryApp = firebase.initializeApp({
+    apiKey: "AIzaSyCjLt3g-2GPsMlxXPnzySXpCHl3-FyA80I",
+    authDomain: "hajj2025-56177.firebaseapp.com",
+    projectId: "hajj2025-56177"
+  }, "Primary");
+
+  const db = firebase.firestore(primaryApp);
+
+  // التخزين في مشروع خارجي
+  const storageApp = firebase.initializeApp({
+    apiKey: "AIzaSyDHNEidF1ShWR7KDSN2GW34Qf6-s6ISvZQ",
+    authDomain: "hajj2025-2.firebaseapp.com",
+    projectId: "hajj2025-2",
+    storageBucket: "hajj2025-2.appspot.com"
+  }, "Storage");
+
+  const storage = firebase.storage(storageApp);
+
+  let currentPhone = "";
+  let currentId = "";
+
+  async function checkData() {
+    const phone = document.getElementById("phoneSearch").value.trim();
+    if (!phone) return alert("يرجى إدخال رقم الجوال");
+
+    document.getElementById("loader").style.display = "block";
+
+    const snapshot = await db.collection("kawadr").where("phone", "==", phone).limit(1).get();
+    document.getElementById("loader").style.display = "none";
+
+    if (snapshot.empty) {
+      alert("لم يتم العثور على بيانات.");
+      return;
+    }
+
+    const data = snapshot.docs[0].data();
+    currentPhone = data.phone;
+    currentId = data.id;
+
+    document.getElementById("id").value = currentId || "";
+    document.getElementById("full_name").value = `${data.name_ar || ""} ${data.father_ar || ""} ${data.grandfather_ar || ""} ${data.family_ar || ""}`.trim();
+
+    document.getElementById("verifyBox").style.display = "none";
+    document.getElementById("formBox").style.display = "block";
+  }
+
+  async function submitData() {
+  const loader = document.getElementById("submitLoader");
+  loader.style.display = "block";
+
+  const birthDate = document.getElementById("birth_date_en").value.trim();
+  const file = document.getElementById("pdfFile").files[0];
+
+  if (!birthDate) {
+    loader.style.display = "none";
+    alert("يرجى إدخال تاريخ الميلاد");
+    return;
+  }
+
+  loader.style.display = "none";
+
+
+    document.querySelector("button").textContent = "جاري الإرسال...";
+
+    await db.collection("kawadr").doc(currentPhone).update({
+      birth_date_en: birthDate,
+      last_updated: new Date().toISOString()
+    });
+
+    if (file) {
+      const fileRef = storage.ref().child(`pdf_files/${currentId}/${file.name}`);
+      await fileRef.put(file);
+      const downloadURL = await fileRef.getDownloadURL();
+
+      await db.collection("kawadr").doc(currentPhone).update({
+        pdf_url: downloadURL
+      });
+    }
+
+    document.body.innerHTML = `
+      <div style="text-align:center; padding: 40px;">
+        <img src="logo.png" alt="شعار الشركة" style="height: 80px; margin-bottom: 20px;">
+        <h2 style="color:#198754;">تم حفظ البيانات بنجاح</h2>
+        <p>نسأل الله أن يوفقكم لخدمة ضيوف الرحمن.</p>
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>
