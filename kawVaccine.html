@@ -257,7 +257,8 @@ const fullName = fullNameParts.slice(0, 3).join(" ").trim();
 
     try {
       console.log("⬅️ بدء تحديث تاريخ الميلاد...");
-      await db.collection("kawadr").doc(currentPhone).update({
+const targetDocId = doc.id || currentPhone;
+await db.collection("kawadr").doc(targetDocId).update({
         birth_date_en: birthDate,
         department: document.getElementById("department").value,
         last_updated: new Date().toISOString()
@@ -282,7 +283,8 @@ const fullName = fullNameParts.slice(0, 3).join(" ").trim();
         console.log("🔗 رد Google Apps Script:", text);
 
         if (text.startsWith("http")) {
-          await db.collection("kawadr").doc(currentPhone).update({
+const targetDocId = doc.id || currentPhone;
+await db.collection("kawadr").doc(targetDocId).update({
             pdf_url: text
           });
           console.log("✅ تم تحديث رابط الملف في Firestore");
