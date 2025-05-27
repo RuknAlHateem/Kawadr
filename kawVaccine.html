@@ -126,7 +126,7 @@
     
   <input type="date" id="birth_date_en" required>
 
-  <label>ملف التطعيمات (PDF):</label>
+  <label>ملف الهوية (PDF):</label>
   <input type="file" id="pdfFile" accept="application/pdf">
 
   <div id="submitLoader" style="display:none; text-align:center; margin-top:15px;">
@@ -302,7 +302,10 @@
     } catch (error) {
       loader.style.display = "none";
       console.error("❌ خطأ أثناء إرسال البيانات:", error);
-      alert("حدث خطأ أثناء رفع البيانات. الرجاء المحاولة مرة أخرى.");
+      
+      let msg = error && error.message ? error.message : error.toString();
+      alert("❌ حدث خطأ أثناء رفع البيانات:\n" + msg);
+    
     }
   }
 
