@@ -167,37 +167,76 @@
   let currentPhone = "";
   let currentId = "";
 
-  async function checkData() {
-    const phone = document.getElementById("phoneSearch").value.trim();
-    if (!phone) return alert("يرجى إدخال رقم الجوال");
+  
+    async function checkData() {
+      const input = document.getElementById("phoneSearch").value.trim();
+      if (!input) {
+        alert("يرجى إدخال رقم الهوية أو الجوال");
+        return;
+      }
 
-    document.getElementById("loader").style.display = "block";
+      const fullInput = input.startsWith("0") ? input : "0" + input;
+      const altInput = input.startsWith("0") ? input.slice(1) : input;
 
-    const snapshot = await db.collection("kawadr").where("phone", "==", phone).limit(1).get();
-    document.getElementById("loader").style.display = "none";
+      document.getElementById("loader").style.display = "block";
 
-    if (snapshot.empty) {
-      alert("لم يتم العثور على بيانات.");
-      return;
+      // محاولة أولى: document ID
+      let doc = await db.collection("kawadr").doc(fullInput).get();
+      if (!doc.exists) {
+        doc = await db.collection("kawadr").doc(altInput).get();
+      }
+
+      // محاولة ثانية: where("phone" == input)
+      if (!doc.exists) {
+        const querySnapshot = await db.collection("kawadr").where("phone", "==", Number(altInput)).get();
+        if (!querySnapshot.empty) {
+          doc = querySnapshot.docs[0];
+        }
+      }
+
+      document.getElementById("loader").style.display = "none";
+
+      if (!doc || !doc.exists) {
+        alert("لم يتم العثور على بيانات.");
+        return;
+      }
+
+      const data = doc.data();
+      currentPhone = data.phone;
+      currentId = data.id;
+
+      document.getElementById("id").value = data.id || "";
+      document.getElementById("full_name").value = `${data.name_ar || ""} ${data.father_ar || ""} ${data.family_ar || ""}`.trim();
+      document.getElementById("birth_date_en").value = data.birth_date_en || "";
+
+      const departmentField = document.getElementById("department");
+      if (data.department && departmentField) {
+        Array.from(departmentField.options).forEach(opt => {
+          if (opt.value === data.department) {
+            opt.selected = true;
+          }
+        });
+      }
+
+      document.getElementById("verifyBox").style.display = "none";
+      document.getElementById("formBox").style.display = "block";
     }
-
-    const data = snapshot.docs[0].data();
-    currentPhone = data.phone;
-    currentId = data.id;
-
-    document.getElementById("id").value = currentId || "";
-    document.getElementById("full_name").value = `${data.name_ar || ""} ${data.father_ar || ""} ${data.grandfather_ar || ""} ${data.family_ar || ""}`.trim();
-
-    document.getElementById("verifyBox").style.display = "none";
-    document.getElementById("formBox").style.display = "block";
-  }
+    
   
   async function submitData() {
     const loader = document.getElementById("submitLoader");
     loader.style.display = "block";
 
     const birthDate = document.getElementById("birth_date_en").value.trim();
+    
+    const department = document.getElementById("department").value;
+    if (!department) {
+      loader.style.display = "none";
+      alert("يرجى اختيار القسم قبل المتابعة");
+      return;
+    }
     const file = document.getElementById("pdfFile").files[0];
+    
     
     const fullNameParts = document.getElementById("full_name").value.trim().split(" ");
     const fullName = [fullNameParts[0], fullNameParts[1] || "", fullNameParts[3] || ""].join(" ").trim();
