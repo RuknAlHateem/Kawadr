@@ -5,9 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>شركة ركن الحطيم للحج - رفع ملف التطعيمات PDF</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <style>
+      * {
+      font-family: 'Cairo', sans-serif;
+    }
     body {
       font-family: 'Cairo', sans-serif;
       direction: rtl;
@@ -78,7 +83,7 @@
     </div>
 
     <label>رقم الهوية:</label>
-    <input type="let" id="id" maxlength="10" placeholder="أدخل رقم الهوية">
+    <input type="tel" id="id" maxlength="10" placeholder="أدخل رقم الهوية">
 
     <label>الاسم الكامل:</label>
 <div id="nameloader" style="color:#888;font-size:14px;display:none;">جاري جلب الاسم...</div>
