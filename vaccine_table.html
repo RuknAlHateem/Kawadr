@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>ملفات التطعيمات</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { direction: rtl; font-family: sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #aaa; padding: 8px; text-align: center; }
+    th { background-color: #f0f0f0; }
+    input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 5px;
+      margin-bottom: 5px;
+    }
+    .status-ok { background-color: #198754; color: white; font-weight: bold; }
+    .status-missing { background-color: #dc3545; color: white; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>ملفات التطعيمات للكادر</h2>
+  <button onclick="exportToExcel()">تصدير إلى Excel</button>
+  <button onclick="exportToCSV()">تصدير إلى CSV</button>
+
+  <table id="recordsTable">
+    <thead>
+      <tr>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+      </tr>
+      <tr>
+        <th>#</th>
+        <th>الحالة</th>
+        <th>رقم الهوية</th>
+        <th>الاسم الكامل</th>
+        <th>تاريخ الميلاد</th>
+        <th>تحميل</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCjLt3g-2GPsMlxXPnzySXpCHl3-FyA80I",
+    authDomain: "hajj2025-56177.firebaseapp.com",
+    projectId: "hajj2025-56177"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const filters = Array(6).fill("");
+
+  function renderTable(data) {
+    const tbody = document.getElementById("tableBody");
+    tbody.innerHTML = "";
+
+    data.forEach((row, index) => {
+      if (
+        filters[0] && !((index + 1).toString().includes(filters[0])) ||
+        filters[1] && !(row._status.includes(filters[1])) ||
+        filters[2] && !(row.id.includes(filters[2])) ||
+        filters[3] && !(row.full_name.includes(filters[3])) ||
+        filters[4] && !(row.birth_date_en.includes(filters[4])) ||
+        filters[5] && !(row.pdf_url.includes(filters[5] || ""))
+      ) return;
+
+      const tr = document.createElement("tr");
+
+      const tdIndex = document.createElement("td");
+      tdIndex.textContent = index + 1;
+      tr.appendChild(tdIndex);
+
+      const tdStatus = document.createElement("td");
+      tdStatus.textContent = row._status;
+      tdStatus.className = row._status === "تم الرفع" ? "status-ok" : "status-missing";
+      tr.appendChild(tdStatus);
+
+      const tdId = document.createElement("td");
+      tdId.textContent = row.id || "";
+      tr.appendChild(tdId);
+
+      const tdName = document.createElement("td");
+      tdName.textContent = row.full_name;
+      tr.appendChild(tdName);
+
+      const tdBirth = document.createElement("td");
+      tdBirth.textContent = row.birth_date_en || "";
+      tr.appendChild(tdBirth);
+
+      const tdLink = document.createElement("td");
+      if (row.pdf_url) {
+        const a = document.createElement("a");
+        a.href = row.pdf_url;
+        a.textContent = "تحميل";
+        a.target = "_blank";
+        a.download = "";
+        tdLink.appendChild(a);
+      } else {
+        tdLink.textContent = "-";
+      }
+      tr.appendChild(tdLink);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function fetchData() {
+    const snapshot = await db.collection("kawadr").get();
+    const data = snapshot.docs.map(doc => {
+      const d = doc.data();
+      return {
+        id: d.id || "",
+        full_name: [d.name_ar, d.father_ar, d.family_ar].filter(Boolean).join(" "),
+        birth_date_en: d.birth_date_en || "",
+        pdf_url: d.pdf_url || "",
+        _status: d.pdf_url ? "تم الرفع" : "لم يتم"
+      };
+    });
+
+    renderTable(data);
+
+    document.querySelectorAll("thead input").forEach((input, i) => {
+      input.addEventListener("input", e => {
+        filters[i] = e.target.value.trim();
+        renderTable(data);
+      });
+    });
+  }
+
+  function exportToExcel() {
+    const rows = [...document.querySelectorAll("#recordsTable tbody tr")].map(tr =>
+      [...tr.children].map(td => td.innerText)
+    );
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["#", "الحالة", "رقم الهوية", "الاسم الكامل", "تاريخ الميلاد", "تحميل"],
+      ...rows
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تطعيمات");
+    XLSX.writeFile(wb, "vaccine_files.xlsx");
+  }
+
+  function exportToCSV() {
+    const rows = [...document.querySelectorAll("#recordsTable tbody tr")].map(tr =>
+      [...tr.children].map(td => `"${td.innerText.replace(/"/g, '""')}"`)
+    );
+    const csv = [["#", "الحالة", "رقم الهوية", "الاسم الكامل", "تاريخ الميلاد", "تحميل"], ...rows]
+      .map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "vaccine_files.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  fetchData();
+</script>
+</body>
+</html>
