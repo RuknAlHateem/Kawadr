@@ -3,7 +3,7 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>ملفات التطعيمات</title>
+  <title>ملفات التطعيمات للكادر</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -30,20 +30,22 @@
   <table id="recordsTable">
     <thead>
       <tr>
-        <th><input type="text" placeholder="فلتر..."></th>
-        <th><input type="text" placeholder="فلتر..."></th>
-        <th><input type="text" placeholder="فلتر..."></th>
-        <th><input type="text" placeholder="فلتر..."></th>
-        <th><input type="text" placeholder="فلتر..."></th>
-        <th><input type="text" placeholder="فلتر..."></th>
-      </tr>
-      <tr>
         <th>#</th>
         <th>الحالة</th>
+        <th>القسم</th>
         <th>رقم الهوية</th>
         <th>الاسم الكامل</th>
         <th>تاريخ الميلاد</th>
         <th>تحميل</th>
+      </tr>
+      <tr>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
+        <th><input type="text" placeholder="فلتر..."></th>
       </tr>
     </thead>
     <tbody id="tableBody"></tbody>
@@ -58,7 +60,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  const filters = Array(6).fill("");
+  const filters = Array(7).fill("");
 
   function renderTable(data) {
     const tbody = document.getElementById("tableBody");
@@ -68,47 +70,24 @@
       if (
         filters[0] && !((index + 1).toString().includes(filters[0])) ||
         filters[1] && !(row._status.includes(filters[1])) ||
-        filters[2] && !(row.id.includes(filters[2])) ||
-        filters[3] && !(row.full_name.includes(filters[3])) ||
-        filters[4] && !(row.birth_date_en.includes(filters[4])) ||
-        filters[5] && !(row.pdf_url.includes(filters[5] || ""))
+        filters[2] && !(row.department.includes(filters[2])) ||
+        filters[3] && !(row.id.includes(filters[3])) ||
+        filters[4] && !(row.full_name.includes(filters[4])) ||
+        filters[5] && !(row.birth_date_en.includes(filters[5])) ||
+        filters[6] && !(row.pdf_url.includes(filters[6] || ""))
       ) return;
 
       const tr = document.createElement("tr");
 
-      const tdIndex = document.createElement("td");
-      tdIndex.textContent = index + 1;
-      tr.appendChild(tdIndex);
-
-      const tdStatus = document.createElement("td");
-      tdStatus.textContent = row._status;
-      tdStatus.className = row._status === "تم الرفع" ? "status-ok" : "status-missing";
-      tr.appendChild(tdStatus);
-
-      const tdId = document.createElement("td");
-      tdId.textContent = row.id || "";
-      tr.appendChild(tdId);
-
-      const tdName = document.createElement("td");
-      tdName.textContent = row.full_name;
-      tr.appendChild(tdName);
-
-      const tdBirth = document.createElement("td");
-      tdBirth.textContent = row.birth_date_en || "";
-      tr.appendChild(tdBirth);
-
-      const tdLink = document.createElement("td");
-      if (row.pdf_url) {
-        const a = document.createElement("a");
-        a.href = row.pdf_url;
-        a.textContent = "تحميل";
-        a.target = "_blank";
-        a.download = "";
-        tdLink.appendChild(a);
-      } else {
-        tdLink.textContent = "-";
-      }
-      tr.appendChild(tdLink);
+      tr.innerHTML = `
+        <td>${index + 1}</td>
+        <td class="${row._status === "تم الرفع" ? "status-ok" : "status-missing"}">${row._status}</td>
+        <td>${row.department || "-"}</td>
+        <td>${row.id || ""}</td>
+        <td>${row.full_name}</td>
+        <td>${row.birth_date_en || ""}</td>
+        <td>${row.pdf_url ? `<a href="${row.pdf_url}" target="_blank" download>تحميل</a>` : "-"}</td>
+      `;
 
       tbody.appendChild(tr);
     });
@@ -120,6 +99,7 @@
       const d = doc.data();
       return {
         id: d.id || "",
+        department: d.department || "",
         full_name: [d.name_ar, d.father_ar, d.family_ar].filter(Boolean).join(" "),
         birth_date_en: d.birth_date_en || "",
         pdf_url: d.pdf_url || "",
@@ -132,6 +112,25 @@
     document.querySelectorAll("thead input").forEach((input, i) => {
       input.addEventListener("input", e => {
         filters[i] = e.target.value.trim();
+
+        const filteredData = data.filter((row, index) => {
+          if (
+            filters[0] && !((index + 1).toString().includes(filters[0])) ||
+            filters[1] && !(row._status.includes(filters[1])) ||
+            filters[2] && !(row.department.includes(filters[2])) ||
+            filters[3] && !(row.id.includes(filters[3])) ||
+            filters[4] && !(row.full_name.includes(filters[4])) ||
+            filters[5] && !(row.birth_date_en.includes(filters[5])) ||
+            filters[6] && !(row.pdf_url.includes(filters[6] || ""))
+          ) return false;
+          return true;
+        });
+
+        renderTable(filteredData);
+      });
+    });((input, i) => {
+      input.addEventListener("input", e => {
+        filters[i] = e.target.value.trim();
         renderTable(data);
       });
     });
@@ -142,7 +141,7 @@
       [...tr.children].map(td => td.innerText)
     );
     const ws = XLSX.utils.aoa_to_sheet([
-      ["#", "الحالة", "رقم الهوية", "الاسم الكامل", "تاريخ الميلاد", "تحميل"],
+      ["#", "الحالة", "القسم", "رقم الهوية", "الاسم الكامل", "تاريخ الميلاد", "تحميل"],
       ...rows
     ]);
     const wb = XLSX.utils.book_new();
@@ -154,7 +153,7 @@
     const rows = [...document.querySelectorAll("#recordsTable tbody tr")].map(tr =>
       [...tr.children].map(td => `"${td.innerText.replace(/"/g, '""')}"`)
     );
-    const csv = [["#", "الحالة", "رقم الهوية", "الاسم الكامل", "تاريخ الميلاد", "تحميل"], ...rows]
+    const csv = [["#", "الحالة", "القسم", "رقم الهوية", "الاسم الكامل", "تاريخ الميلاد", "تحميل"], ...rows]
       .map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
