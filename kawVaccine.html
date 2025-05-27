@@ -274,7 +274,7 @@ await db.collection("kawadr").doc(targetDocId).update({
         formData.append("filename", fullName + " - " + documentId + ".pdf");
 
         console.log("⬅️ إرسال الملف إلى Google Drive Web App...");
-        const response = await fetch("https://script.google.com/macros/s/AKfycbwbV6wS7aMTaQrMMtMR7TxqeXxzxoQtBF9owvrmky0cfddGK9o13fsTUOIoDL4fbWT-/exec", {
+        const response = await fetch("https://script.google.com/macros/s/AKfycbwVhO_q_6D5o3ukjD1k4SxELnJEitci0OslFgNdqU1KMV4S-a8WWgM3y2ifJ8Ey2jky/exec", {
           method: "POST",
           body: formData,
         });
