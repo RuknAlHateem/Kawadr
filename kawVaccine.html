@@ -72,7 +72,7 @@
 <body>
   <div class="box">
     <div class="header">
-      <img src="https://via.placeholder.com/150x80?text=Logo" alt="شعار الشركة">
+      <img src="logo.png" alt="شعار الشركة">
       <h2>شركة ركن الحطيم للحج</h2>
       <p>نموذج رفع ملف التطعيم - حج 1446هـ</p>
     </div>
@@ -153,7 +153,7 @@
             await db.collection("kawadr").doc(q.docs[0].id).update({
               pdf_url: text
             });
-            document.body.innerHTML = `<div style="text-align:center;padding:40px;"><img src=\"https://via.placeholder.com/150x80?text=Logo\" alt=\"شعار الشركة\" style=\"height:80px;margin-bottom:20px;\"><h2 style=\"color:#198754;\">تم رفع الملف بنجاح</h2><p>نسأل الله أن يوفقكم لخدمة ضيوف الرحمن.</p></div>`;
+            document.body.innerHTML = `<div style="text-align:center;padding:40px;"><img src=\"logo.png" alt=\"شعار الشركة\" style=\"height:80px;margin-bottom:20px;\"><h2 style=\"color:#198754;\">تم رفع الملف بنجاح</h2><p>نسأل الله أن يوفقكم لخدمة ضيوف الرحمن.</p></div>`;
           } else {
             alert("✅ تم رفع الملف، لكن لم يتم العثور على السجل.");
           }
