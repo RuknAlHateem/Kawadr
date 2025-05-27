@@ -239,7 +239,7 @@
     
     
     const fullNameParts = document.getElementById("full_name").value.trim().split(" ");
-    const fullName = [fullNameParts[0], fullNameParts[1] || "", fullNameParts[3] || ""].join(" ").trim();
+const fullName = fullNameParts.slice(0, 3).join(" ").trim();
     
     const documentId = document.getElementById("phoneSearch").value.trim();
 
