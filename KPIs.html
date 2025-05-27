@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>مؤشرات الأقسام</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      font-family: 'Cairo', sans-serif;
+    }
+
+    body {
+      background-color: #f3f3f3;
+      padding: 1rem;
+      margin: 0;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .stat-boxes {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 1rem;
+  flex-wrap: nowrap;
+}
+
+
+    .stat-box {
+      background-color: #f7f7f7;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px 15px;
+      text-align: center;
+      min-width: 90px;
+    }
+
+    .stat-box strong {
+      display: block;
+      font-size: 1.2rem;
+      color: #111;
+    }
+
+    .stat-box .label {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 5px;
+    }
+
+    .chart-container {
+      width: 180px;
+      height: 180px;
+      margin-top: 1rem;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cards"></div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCjLt3g-2GPsMlxXPnzySXpCHl3-FyA80I",
+      authDomain: "hajj2025-56177.firebaseapp.com",
+      projectId: "hajj2025-56177",
+      storageBucket: "hajj2025-56177.appspot.com",
+      messagingSenderId: "199404422758",
+      appId: "1:199404422758:web:35a17e6155f660e0128fa7",
+      measurementId: "G-T5NYMDX68Z"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const container = document.getElementById("cards");
+
+    async function fetchStats() {
+      const snapshot = await db.collection("kawadr").get();
+
+      const departments = {};
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const dept = data.department || "غير محدد";
+        if (!departments[dept]) {
+          departments[dept] = { total: 0, uploaded: 0 };
+        }
+        departments[dept].total++;
+        if (data.pdf_url && data.pdf_url.trim() !== "") {
+          departments[dept].uploaded++;
+        }
+      });
+
+      renderCards(departments);
+    }
+
+    function renderCards(data) {
+      const colors = ['#2d9958', '#44bde7', '#fab334', '#e8593a'];
+      let index = 0;
+
+      Object.entries(data).forEach(([dept, { total, uploaded }]) => {
+        const percent = Math.round((uploaded / total) * 100);
+        const color = colors[index % colors.length];
+        const canvasId = `chart-${index}`;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h3>${dept}</h3>
+          <div class="stat-boxes">
+            <div class="stat-box">
+              <strong>${total}</strong>
+              <div class="label">عدد الكوادر</div>
+            </div>
+            <div class="stat-box">
+              <strong>${uploaded}</strong>
+              <div class="label">عدد الملفات</div>
+            </div>
+            <div class="stat-box">
+              <strong>${percent}%</strong>
+              <div class="label">نسبة الإنجاز</div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="${canvasId}"></canvas>
+          </div>
+        `;
+
+        container.appendChild(card);
+        drawChart(canvasId, uploaded, total, color);
+        index++;
+      });
+    }
+
+    function drawChart(canvasId, completed, total, color) {
+      new Chart(document.getElementById(canvasId), {
+        type: 'doughnut',
+        data: {
+          labels: ['تم الرفع', 'لم يُرفع'],
+          datasets: [{
+            data: [completed, total - completed],
+            backgroundColor: [color, '#e0e0e0'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          cutout: '70%',
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    fetchStats();
+  </script>
+
+</body>
+</html>
