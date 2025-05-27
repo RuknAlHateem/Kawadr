@@ -257,7 +257,7 @@ const fullName = fullNameParts.slice(0, 3).join(" ").trim();
 
     try {
       console.log("⬅️ بدء تحديث تاريخ الميلاد...");
-const targetDocId = doc.id || currentPhone;
+const targetDocId = currentPhone;
 await db.collection("kawadr").doc(targetDocId).update({
         birth_date_en: birthDate,
         department: document.getElementById("department").value,
@@ -283,7 +283,7 @@ await db.collection("kawadr").doc(targetDocId).update({
         console.log("🔗 رد Google Apps Script:", text);
 
         if (text.startsWith("http")) {
-const targetDocId = doc.id || currentPhone;
+const targetDocId = currentPhone;
 await db.collection("kawadr").doc(targetDocId).update({
             pdf_url: text
           });
